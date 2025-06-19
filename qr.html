@@ -67,13 +67,22 @@
             top: 15px;
             right: 15px;
             z-index: 1000;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            border-radius: 25px;
+            padding: 8px 15px;
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            background-color: #FF6B35;
+            color: white;
+        }
+        .add-to-cart-btn:active {
+            transform: scale(0.95);
+            transition: transform 0.1s;
+        }
+        .decrease-btn:active, .increase-btn:active, .remove-btn:active {
+            transform: scale(0.95);
+            transition: transform 0.1s;
         }
     </style>
 </head>
@@ -86,8 +95,8 @@
     </div>
 
     <!-- Garson Çağır Butonu -->
-    <button id="callWaiterBtn" class="call-waiter-btn btn btn-warning">
-        <i class="bi bi-bell-fill"></i>
+    <button id="callWaiterBtn" class="call-waiter-btn">
+        <i class="bi bi-bell-fill me-2"></i> Garson Çağır
     </button>
 
     <!-- Üst bar -->

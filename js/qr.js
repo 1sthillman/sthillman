@@ -296,6 +296,12 @@ function renderMenuItems(categoryId) {
         button.addEventListener('click', () => {
             const itemId = button.dataset.id;
             addToCart(itemId);
+            
+            // Buton tıklama hissiyatı için animasyon
+            button.classList.add('active');
+            setTimeout(() => {
+                button.classList.remove('active');
+            }, 150);
         });
     });
 }
@@ -439,37 +445,8 @@ async function submitOrder() {
         // Toplam tutarı hesapla
         const totalAmount = appState.cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
         
-        // Önce masalar tablosunda masa durumunu güncelle
-        let tableUpdated = false;
-        
-        try {
-            const { data, error } = await supabase
-                .from('masalar')
-                .update({ durum: 'qr_siparis' })
-                .eq('masa_no', appState.tableNumber);
-                
-            if (!error) {
-                tableUpdated = true;
-            }
-        } catch (error) {
-            console.log('Masalar tablosunda masa güncellenemedi:', error);
-        }
-        
-        // Eğer masalar tablosunda güncellenemezse tables tablosunda dene
-        if (!tableUpdated) {
-            try {
-                const { data, error } = await supabase
-                    .from('tables')
-                    .update({ status: 'qr_order' })
-                    .eq('number', appState.tableNumber);
-                    
-                if (!error) {
-                    tableUpdated = true;
-                }
-            } catch (error) {
-                console.log('Tables tablosunda masa güncellenemedi:', error);
-            }
-        }
+        // Masa durumunu güncelle
+        await updateTableStatus('qr_siparis');
         
         // Sipariş oluştur
         let orderCreated = false;
@@ -482,7 +459,7 @@ async function submitOrder() {
                 .insert({
                     masa_no: appState.tableNumber,
                     masa_id: appState.tableId,
-                    durum: 'beklemede',
+                    durum: 'qr_siparis',
                     siparis_notu: elements.orderNote.value.trim() || null,
                     toplam_fiyat: totalAmount,
                     musteri_siparis: true,
@@ -521,7 +498,7 @@ async function submitOrder() {
                     .insert({
                         table_number: appState.tableNumber,
                         table_id: appState.tableId,
-                        status: 'new',
+                        status: 'qr_order',
                         note: elements.orderNote.value.trim() || null,
                         total_amount: totalAmount,
                         is_customer_order: true,
@@ -576,17 +553,73 @@ async function submitOrder() {
     }
 }
 
+// Masa durumunu güncelle
+async function updateTableStatus(status) {
+    try {
+        // Önce masalar tablosunda dene
+        let tableUpdated = false;
+        
+        try {
+            const { error } = await supabase
+                .from('masalar')
+                .update({ durum: status })
+                .eq('masa_no', appState.tableNumber);
+                
+            if (!error) {
+                tableUpdated = true;
+                console.log(`Masa ${appState.tableNumber} durumu güncellendi: ${status}`);
+            }
+        } catch (error) {
+            console.log('Masalar tablosunda masa güncellenemedi:', error);
+        }
+        
+        // Eğer masalar tablosunda güncellenemezse tables tablosunda dene
+        if (!tableUpdated) {
+            try {
+                const statusMap = {
+                    'qr_siparis': 'qr_order',
+                    'çağrı': 'call'
+                };
+                
+                const englishStatus = statusMap[status] || status;
+                
+                const { error } = await supabase
+                    .from('tables')
+                    .update({ status: englishStatus })
+                    .eq('number', appState.tableNumber);
+                    
+                if (!error) {
+                    tableUpdated = true;
+                    console.log(`Table ${appState.tableNumber} status updated: ${englishStatus}`);
+                }
+            } catch (error) {
+                console.log('Tables tablosunda masa güncellenemedi:', error);
+            }
+        }
+        
+        if (!tableUpdated) {
+            throw new Error('Masa durumu güncellenemedi.');
+        }
+    } catch (error) {
+        console.error('Masa durumu güncellenirken hata:', error);
+        throw error;
+    }
+}
+
 // Garson çağır
 async function callWaiter() {
     try {
         elements.loadingOverlay.style.display = 'flex';
         elements.callWaiterBtn.disabled = true;
         
-        // Önce waiter_calls tablosunda dene
+        // Masa durumunu güncelle
+        await updateTableStatus('çağrı');
+        
+        // Garson çağrısı oluştur
         let callCreated = false;
         
         try {
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('waiter_calls')
                 .insert({
                     table_id: appState.tableId,
@@ -596,44 +629,13 @@ async function callWaiter() {
                 
             if (!error) {
                 callCreated = true;
+                console.log('Garson çağrısı oluşturuldu');
             }
         } catch (error) {
             console.log('Waiter_calls tablosunda çağrı oluşturulamadı:', error);
         }
         
-        // Masa durumunu güncelle
-        let tableUpdated = false;
-        
-        try {
-            const { data, error } = await supabase
-                .from('masalar')
-                .update({ durum: 'çağrı' })
-                .eq('masa_no', appState.tableNumber);
-                
-            if (!error) {
-                tableUpdated = true;
-            }
-        } catch (error) {
-            console.log('Masalar tablosunda masa güncellenemedi:', error);
-        }
-        
-        // Eğer masalar tablosunda güncellenemezse tables tablosunda dene
-        if (!tableUpdated) {
-            try {
-                const { data, error } = await supabase
-                    .from('tables')
-                    .update({ status: 'call' })
-                    .eq('number', appState.tableNumber);
-                    
-                if (!error) {
-                    tableUpdated = true;
-                }
-            } catch (error) {
-                console.log('Tables tablosunda masa güncellenemedi:', error);
-            }
-        }
-        
-        if (!callCreated && !tableUpdated) {
+        if (!callCreated) {
             throw new Error('Garson çağrısı oluşturulamadı. Lütfen tekrar deneyin.');
         }
         
