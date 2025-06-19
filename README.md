@@ -23,4 +23,35 @@ Bu proje, restoranlarda QR kod ile sipariş verme sistemini içerir. Müşterile
 
 - Frontend: HTML, CSS, JavaScript
 - Backend: Supabase (PostgreSQL veritabanı)
-- Tablolar: `masalar/siparisler`, `tables/orders`, `kategoriler`, `urunler` 
+- Gerçek zamanlı veri senkronizasyonu
+
+## Sipariş Akışı
+
+1. Müşteri QR kodu okutarak masaya özel sipariş sayfasını açar
+2. Müşteri ürünleri sepete ekler ve siparişi gönderir
+3. Masa durumu "qr_siparis" olarak güncellenir
+4. Garson QR ile oluşturulan siparişi görür ve onaylar
+5. Onaylanan sipariş mutfağa iletilir ve masa durumu "dolu" olarak güncellenir
+6. Mutfak siparişi hazırlar ve "hazır" durumuna getirir
+7. Garson siparişi teslim alır ve servis eder
+8. Ödeme alındıktan sonra masa "boş" durumuna geçer
+
+## Güncellemeler
+
+### Son Güncelleme (19.06.2025)
+
+- Garson çağırma butonu iyileştirildi:
+  - Turuncu renk yapıldı
+  - "Garson Çağır" yazısı eklendi
+- Butonlara tıklama hissiyatı eklendi
+- Sipariş gönderme işlemi düzeltildi
+- Masa durumu güncelleme fonksiyonu optimize edildi
+- Supabase veritabanı entegrasyonu iyileştirildi
+
+## Test Sonuçları
+
+- QR kod ile sipariş oluşturma başarıyla çalışıyor
+- Masa durumu "qr_siparis" olarak güncelleniyor
+- Garson çağırma özelliği çalışıyor
+- Adisyon uygulamasında QR siparişleri görüntülenebiliyor
+- Garson QR siparişlerini onaylayabiliyor 
