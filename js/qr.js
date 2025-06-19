@@ -296,12 +296,6 @@ function renderMenuItems(categoryId) {
         button.addEventListener('click', () => {
             const itemId = button.dataset.id;
             addToCart(itemId);
-            
-            // Buton tıklama hissiyatı için animasyon
-            button.classList.add('active');
-            setTimeout(() => {
-                button.classList.remove('active');
-            }, 150);
         });
     });
 }
@@ -329,6 +323,18 @@ function addToCart(itemId) {
     
     // Sepeti güncelle
     renderCart();
+    
+    // Görsel geri bildirim
+    const button = document.querySelector(`.add-to-cart-btn[data-id="${itemId}"]`);
+    if (button) {
+        button.classList.add('active');
+        button.innerHTML = '<i class="bi bi-check-lg"></i> Eklendi';
+        
+        setTimeout(() => {
+            button.classList.remove('active');
+            button.innerHTML = '<i class="bi bi-plus-lg"></i> Ekle';
+        }, 500);
+    }
 }
 
 // Sepetten ürün çıkar
