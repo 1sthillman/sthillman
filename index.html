@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Sipariş Sistemi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        .logo {
+            max-width: 200px;
+            margin-bottom: 2rem;
+        }
+        .qr-demo {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            max-width: 300px;
+            background-color: #f8f9fa;
+        }
+        .footer {
+            padding: 1rem;
+            background-color: #f8f9fa;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container main-content">
+        <img src="img/logo.png" alt="Logo" class="logo">
+        <h1>QR Sipariş Sistemi</h1>
+        <p class="lead">Restoranınız için modern ve pratik sipariş çözümü</p>
+        
+        <div class="qr-demo">
+            <h5>Örnek QR Kod</h5>
+            <p>Gerçek bir QR kod oluşturmak için aşağıdaki URL'yi kullanabilirsiniz:</p>
+            <code>https://yourdomain.com/qr.html?table=1</code>
+            <p class="mt-2">Bu URL, 1 numaralı masa için sipariş sayfasını açar.</p>
+        </div>
+        
+        <div class="mt-4">
+            <h3>Nasıl Çalışır?</h3>
+            <div class="row mt-4">
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">1. QR Kodu Oluşturun</h5>
+                            <p class="card-text">Her masa için özel bir QR kod oluşturun ve masalara yerleştirin.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">2. Müşteri Deneyimi</h5>
+                            <p class="card-text">Müşteriler QR kodu okutarak menüyü görüntüler ve sipariş verir.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">3. Sipariş Yönetimi</h5>
+                            <p class="card-text">Garsonlar siparişleri onaylar ve müşterilere hızlı hizmet sağlar.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-5">
+            <a href="qr.html?table=demo" class="btn btn-primary btn-lg">Demo Sayfasını Görüntüle</a>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 QR Sipariş Sistemi. Tüm hakları saklıdır.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

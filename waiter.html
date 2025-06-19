@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garson Çağır</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8f9fa;
+            padding: 1rem;
+        }
+        .waiter-card {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background-color: white;
+        }
+        .icon-container {
+            font-size: 5rem;
+            color: #FF6B35;
+            margin-bottom: 1rem;
+        }
+        .success-message {
+            display: none;
+            color: #198754;
+        }
+        .table-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="waiter-card">
+        <div class="icon-container">
+            <i class="bi bi-bell"></i>
+        </div>
+        <h2>Garson Çağır</h2>
+        <div class="table-number" id="tableDisplay">Masa: ...</div>
+        <p>Garson çağırmak için aşağıdaki butona tıklayın.</p>
+        
+        <button id="callWaiterBtn" class="btn btn-primary btn-lg mt-3">
+            <i class="bi bi-bell-fill me-2"></i>Garson Çağır
+        </button>
+        
+        <div class="success-message mt-4" id="successMessage">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            Garson çağrınız alındı! En kısa sürede masanıza gelinecektir.
+        </div>
+        
+        <div class="mt-4">
+            <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Geri Dön
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase bağlantı bilgileri
+        const SUPABASE_URL = 'https://dhtttamiovdlazacegem.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRodHR0YW1pb3ZkbGF6YWNlZ2VtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMzg4MTMsImV4cCI6MjA2NTkxNDgxM30.ILp4uQ8un0WBMMH0KmNAQPQ2_Z2swYLOvObYmMInsMA';
+        
+        // Supabase istemcisini oluştur
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // DOM elementleri
+        const tableDisplay = document.getElementById('tableDisplay');
+        const callWaiterBtn = document.getElementById('callWaiterBtn');
+        const successMessage = document.getElementById('successMessage');
+        
+        // URL'den masa numarasını al
+        const urlParams = new URLSearchParams(window.location.search);
+        const tableNumber = urlParams.get('table');
+        
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', () => {
+            // Masa numarasını göster
+            if (tableNumber) {
+                tableDisplay.textContent = `Masa: ${tableNumber}`;
+            } else {
+                tableDisplay.textContent = 'Masa bulunamadı';
+                callWaiterBtn.disabled = true;
+            }
+            
+            // Garson çağırma butonu tıklandığında
+            callWaiterBtn.addEventListener('click', async () => {
+                if (!tableNumber) return;
+                
+                callWaiterBtn.disabled = true;
+                callWaiterBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Çağrılıyor...';
+                
+                try {
+                    // Garson çağırma kaydını veritabanına ekle
+                    const { error } = await supabase
+                        .from('garson_cagrilari')
+                        .insert([
+                            { 
+                                masa_no: tableNumber,
+                                durum: 'beklemede',
+                                tarih: new Date().toISOString()
+                            }
+                        ]);
+                    
+                    if (error) {
+                        console.error('Garson çağırma hatası:', error);
+                        alert('Garson çağırma işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+                        callWaiterBtn.disabled = false;
+                        callWaiterBtn.innerHTML = '<i class="bi bi-bell-fill me-2"></i>Garson Çağır';
+                        return;
+                    }
+                    
+                    // Başarılı mesajını göster
+                    successMessage.style.display = 'block';
+                    callWaiterBtn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Çağrı Gönderildi';
+                    callWaiterBtn.classList.remove('btn-primary');
+                    callWaiterBtn.classList.add('btn-success');
+                    
+                    // 5 saniye sonra geri dön
+                    setTimeout(() => {
+                        window.history.back();
+                    }, 5000);
+                    
+                } catch (err) {
+                    console.error('Beklenmeyen hata:', err);
+                    alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                    callWaiterBtn.disabled = false;
+                    callWaiterBtn.innerHTML = '<i class="bi bi-bell-fill me-2"></i>Garson Çağır';
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

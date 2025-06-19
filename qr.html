@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Sipariş</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .menu-category {
+            cursor: pointer;
+            padding: 10px 15px;
+            border-radius: 50px;
+            margin: 0 5px;
+            white-space: nowrap;
+        }
+        .menu-category.active {
+            background-color: #FF6B35;
+            color: white;
+        }
+        .menu-item {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .menu-item-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        .menu-item-price {
+            color: #FF6B35;
+            font-weight: bold;
+        }
+        .cart-item {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .quantity {
+            margin: 0 10px;
+            font-weight: bold;
+        }
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255,255,255,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        .call-waiter-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1000;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Yükleniyor göstergesi -->
+    <div id="loadingOverlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Yükleniyor...</span>
+        </div>
+    </div>
+
+    <!-- Garson Çağır Butonu -->
+    <button id="callWaiterBtn" class="call-waiter-btn btn btn-warning">
+        <i class="bi bi-bell-fill"></i>
+    </button>
+
+    <!-- Üst bar -->
+    <header class="bg-primary text-white py-3">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h4 mb-0">QR Sipariş</h1>
+                <div id="tableDisplay" class="badge bg-warning fs-6">Masa</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Menü kategorileri -->
+    <div class="bg-light py-3 mb-3">
+        <div class="container">
+            <div class="d-flex overflow-auto pb-2" id="categoryContainer">
+                <!-- Kategoriler JavaScript ile eklenecek -->
+                <div class="menu-category active" data-category="all">Tümü</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ana içerik -->
+    <div class="container mb-5 pb-5">
+        <div class="row">
+            <!-- Menü listesi -->
+            <div class="col-md-8 mb-4">
+                <div class="row" id="menuList">
+                    <!-- Menü öğeleri JavaScript ile eklenecek -->
+                    <div class="col-12 text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Yükleniyor...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Menü yükleniyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sepet -->
+            <div class="col-md-4">
+                <div class="card sticky-top" style="top: 10px;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Siparişiniz</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="cartItems">
+                            <!-- Sepet öğeleri JavaScript ile eklenecek -->
+                            <div class="text-center py-3 text-muted">
+                                Sepetiniz boş. Lütfen menüden ürün seçin.
+                            </div>
+                        </div>
+                        
+                        <div id="cartTotalSection" style="display: none;">
+                            <hr>
+                            <div class="d-flex justify-content-between mb-3">
+                                <h5>Toplam:</h5>
+                                <h5 id="cartTotal">₺0.00</h5>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="orderNote" class="form-label">Sipariş Notu</label>
+                                <textarea id="orderNote" class="form-control" rows="2" placeholder="Özel istekleriniz varsa belirtebilirsiniz."></textarea>
+                            </div>
+                            
+                            <button id="submitOrderBtn" class="btn btn-primary w-100">
+                                <i class="bi bi-send"></i> Siparişi Gönder
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sipariş başarılı modal -->
+    <div class="modal fade" id="orderSuccessModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Sipariş Alındı</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+                        <h4 class="mt-3">Siparişiniz başarıyla alındı!</h4>
+                        <p>Siparişiniz garson tarafından onaylandıktan sonra hazırlanmaya başlanacaktır.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Tamam</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Garson çağırma başarılı modal -->
+    <div class="modal fade" id="waiterCallModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">Garson Çağrısı</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-bell text-warning" style="font-size: 4rem;"></i>
+                        <h4 class="mt-3">Garson çağrınız alındı!</h4>
+                        <p>Garson en kısa sürede masanıza gelecektir.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Tamam</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Uygulama JS -->
+    <script src="js/qr.js"></script>
+</body>
+</html> 

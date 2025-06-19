@@ -1,0 +1,254 @@
+/* Main Styles */
+:root {
+    --primary: #0d6efd;
+    --secondary: #6c757d;
+    --success: #198754;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --info: #0dcaf0;
+    --light: #f8f9fa;
+    --dark: #212529;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--light);
+}
+
+/* Sidebar Styles */
+.sidebar {
+    height: 100vh;
+    position: sticky;
+    top: 0;
+}
+
+/* Call Cards */
+.call-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+}
+
+.call-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.call-card .card-header {
+    border-bottom: none;
+    padding: 1rem 1.5rem;
+}
+
+.call-card .card-body {
+    padding: 1.5rem;
+}
+
+.call-card.urgent {
+    border-left: 4px solid var(--danger);
+}
+
+.call-card.waiting {
+    border-left: 4px solid var(--primary);
+}
+
+.call-card.responded {
+    border-left: 4px solid var(--success);
+}
+
+.call-card .table-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.call-card .call-time {
+    font-size: 0.85rem;
+    color: var(--secondary);
+}
+
+.call-card .call-note {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background-color: var(--light);
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.call-card .call-status {
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    display: inline-block;
+}
+
+.call-card .waiting-status {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: var(--primary);
+}
+
+.call-card .urgent-status {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--danger);
+}
+
+.call-card .responded-status {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: var(--success);
+}
+
+/* Animation for new calls */
+@keyframes highlightNew {
+    0% { background-color: rgba(13, 110, 253, 0.2); }
+    100% { background-color: transparent; }
+}
+
+.call-card.new-call {
+    animation: highlightNew 2s ease-out;
+}
+
+/* Statistics Styles */
+.statistics-container, .settings-container {
+    padding: 1.5rem 0;
+}
+
+/* QR Code Container */
+#qrCodeContainer {
+    display: inline-block;
+    padding: 1rem;
+    background-color: white;
+    border-radius: 0.5rem;
+}
+
+/* Response Modal */
+#responseModal .call-details {
+    background-color: var(--light);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Notification area */
+#notificationArea {
+    display: none;
+}
+
+#notificationArea.show {
+    display: block;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        padding: 20px 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+}
+
+:where([class^="ri-"])::before { content: "\f3c2"; }
+
+.notification-sound {
+    display: none;
+}
+
+.table-card {
+    transition: all 0.3s ease;
+}
+
+.table-card:hover {
+    transform: translateY(-2px);
+}
+
+.table-empty {
+    border-color: #e5e7eb;
+}
+
+.table-active {
+    border-color: #3A86FF;
+}
+
+.table-ready {
+    border-color: #10B981;
+}
+
+.table-delivered {
+    border-color: #FBBF24;
+}
+
+.table-served {
+    border-color: #8B5CF6;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Responsive grid */
+@media (min-width: 640px) {
+    #tableGrid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 768px) {
+    #tableGrid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1024px) {
+    #tableGrid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1280px) {
+    #tableGrid {
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1536px) {
+    #tableGrid {
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+    }
+} 
