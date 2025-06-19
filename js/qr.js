@@ -477,6 +477,7 @@ async function submitOrder() {
             if (!error && data) {
                 orderCreated = true;
                 orderId = data.id;
+                console.log('Sipariş başarıyla oluşturuldu (siparisler tablosu):', data);
                 
                 // Sipariş öğelerini ekle
                 const orderItems = appState.cart.map(item => ({
@@ -491,6 +492,8 @@ async function submitOrder() {
                 await supabase
                     .from('siparis_kalemleri')
                     .insert(orderItems);
+                
+                console.log('Sipariş kalemleri eklendi');
             }
         } catch (error) {
             console.log('Siparisler tablosunda sipariş oluşturulamadı:', error);
@@ -516,6 +519,7 @@ async function submitOrder() {
                 if (!error && data) {
                     orderCreated = true;
                     orderId = data.id;
+                    console.log('Sipariş başarıyla oluşturuldu (orders tablosu):', data);
                     
                     // Sipariş öğelerini ekle
                     const orderItems = appState.cart.map(item => ({
@@ -530,6 +534,8 @@ async function submitOrder() {
                     await supabase
                         .from('order_items')
                         .insert(orderItems);
+                    
+                    console.log('Sipariş kalemleri eklendi (order_items tablosu)');
                 }
             } catch (error) {
                 console.log('Orders tablosunda sipariş oluşturulamadı:', error);
@@ -566,6 +572,7 @@ async function updateTableStatus(status) {
         let tableUpdated = false;
         
         try {
+            console.log(`Masalar tablosunda masa ${appState.tableNumber} durumu güncelleniyor: ${status}`);
             const { error } = await supabase
                 .from('masalar')
                 .update({ durum: status })
@@ -574,33 +581,39 @@ async function updateTableStatus(status) {
             if (!error) {
                 tableUpdated = true;
                 console.log(`Masa ${appState.tableNumber} durumu güncellendi: ${status}`);
+            } else {
+                console.error('Masalar tablosunda güncelleme hatası:', error);
             }
         } catch (error) {
             console.log('Masalar tablosunda masa güncellenemedi:', error);
         }
         
-        // Eğer masalar tablosunda güncellenemezse tables tablosunda dene
-        if (!tableUpdated) {
-            try {
-                const statusMap = {
-                    'qr_siparis': 'qr_order',
-                    'çağrı': 'call'
-                };
+        // Tables tablosunda da güncelleme yapalım (her iki tabloda da güncellemek için)
+        try {
+            const statusMap = {
+                'qr_siparis': 'qr_order',
+                'çağrı': 'call',
+                'dolu': 'occupied',
+                'boş': 'empty',
+                'hazır': 'ready'
+            };
+            
+            const englishStatus = statusMap[status] || status;
+            
+            console.log(`Tables tablosunda masa ${appState.tableNumber} durumu güncelleniyor: ${englishStatus}`);
+            const { error } = await supabase
+                .from('tables')
+                .update({ status: englishStatus })
+                .eq('number', appState.tableNumber);
                 
-                const englishStatus = statusMap[status] || status;
-                
-                const { error } = await supabase
-                    .from('tables')
-                    .update({ status: englishStatus })
-                    .eq('number', appState.tableNumber);
-                    
-                if (!error) {
-                    tableUpdated = true;
-                    console.log(`Table ${appState.tableNumber} status updated: ${englishStatus}`);
-                }
-            } catch (error) {
-                console.log('Tables tablosunda masa güncellenemedi:', error);
+            if (!error) {
+                tableUpdated = true;
+                console.log(`Table ${appState.tableNumber} status updated: ${englishStatus}`);
+            } else {
+                console.error('Tables tablosunda güncelleme hatası:', error);
             }
+        } catch (error) {
+            console.log('Tables tablosunda masa güncellenemedi:', error);
         }
         
         if (!tableUpdated) {

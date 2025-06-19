@@ -12,7 +12,10 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--light);
+    background-color: #f8f9fa;
+    color: #333;
+    margin: 0;
+    padding: 0;
 }
 
 /* Sidebar Styles */
@@ -189,12 +192,12 @@ body {
 }
 
 .fade-in {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.3s ease-in-out;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .slide-up {
@@ -251,4 +254,84 @@ input[type="number"]::-webkit-outer-spin-button {
     #tableGrid {
         grid-template-columns: repeat(10, minmax(0, 1fr));
     }
+}
+
+/* Buton stilleri */
+.btn-primary {
+    background-color: #FF6B35 !important;
+    border-color: #FF6B35 !important;
+}
+
+.btn-primary:hover {
+    background-color: #e55a2b !important;
+    border-color: #e55a2b !important;
+}
+
+.btn-primary:active {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+}
+
+/* Buton tıklama hissiyatı */
+.add-to-cart-btn {
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.add-to-cart-btn:active {
+    transform: scale(0.95);
+    background-color: #e55a2b !important;
+}
+
+.add-to-cart-btn.active {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+}
+
+/* Sepet buton tıklama hissiyatı */
+.decrease-btn, .increase-btn, .remove-btn {
+    transition: transform 0.2s;
+}
+
+.decrease-btn:active, .increase-btn:active, .remove-btn:active {
+    transform: scale(0.95);
+}
+
+/* Garson çağırma butonu */
+.call-waiter-btn {
+    background-color: #FF6B35;
+    color: white;
+    border: none;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.call-waiter-btn:hover {
+    background-color: #e55a2b;
+}
+
+.call-waiter-btn:active {
+    transform: scale(0.95);
+    background-color: #d04d21;
+}
+
+/* Kategori butonları */
+.menu-category {
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.menu-category:active {
+    transform: scale(0.95);
+}
+
+.menu-category.active {
+    background-color: #FF6B35;
+    color: white;
+}
+
+/* Menü öğeleri */
+.menu-item {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.menu-item:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 } 
