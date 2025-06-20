@@ -1,4 +1,4 @@
-// Supabase bağlantı bilgileri
+// Supabase bağlantı bilgileri (Yenilendi)
 const SUPABASE_URL = 'https://dhtttamiovdlazacegem.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRodHR0YW1pb3ZkbGF6YWNlZ2VtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMzg4MTMsImV4cCI6MjA2NTkxNDgxM30.ILp4uQ8un0WBMMH0KmNAQPQ2_Z2swYLOvObYmMInsMA';
 
@@ -81,9 +81,33 @@ async function initApp() {
         
         // Yükleniyor göstergesini kapat
         elements.loadingOverlay.style.display = 'none';
+        
+        // Realtime bağlantısını başlat
+        initRealtimeConnection();
     } catch (error) {
         console.error('Uygulama başlatılırken hata:', error);
         showError('Uygulama başlatılırken bir hata oluştu: ' + error.message);
+    }
+}
+
+// Realtime bağlantısını başlat
+function initRealtimeConnection() {
+    try {
+        const channel = supabase.channel('restaurant-app')
+            .on('broadcast', { event: 'restaurant-updates' }, (payload) => {
+                console.log('Broadcast alındı:', payload);
+                
+                // Garson yanıtlarını işle
+                if (payload.payload.type === 'waiter-response' && 
+                    payload.payload.tableNumber === appState.tableNumber) {
+                    showToast('Garson çağrınıza yanıt verildi, kısa süre içinde masanıza gelecek');
+                }
+            })
+            .subscribe();
+            
+        console.log('Realtime bağlantısı kuruldu');
+    } catch (error) {
+        console.error('Realtime bağlantısı kurulamadı:', error);
     }
 }
 
@@ -333,7 +357,7 @@ function addToCart(itemId) {
         setTimeout(() => {
             button.classList.remove('active');
             button.innerHTML = '<i class="bi bi-plus-lg"></i> Ekle';
-        }, 500);
+        }, 800);
     }
 }
 
@@ -365,6 +389,15 @@ function increaseQuantity(itemId) {
     if (item) {
         item.quantity += 1;
         renderCart();
+        
+        // Buton animasyonu
+        const button = document.querySelector(`.increase-btn[data-id="${itemId}"]`);
+        if (button) {
+            button.classList.add('button-pop');
+            setTimeout(() => {
+                button.classList.remove('button-pop');
+            }, 300);
+        }
     }
 }
 
@@ -469,7 +502,8 @@ async function submitOrder() {
                     siparis_notu: elements.orderNote.value.trim() || null,
                     toplam_fiyat: totalAmount,
                     musteri_siparis: true,
-                    urunler: JSON.stringify(appState.cart)
+                    urunler: JSON.stringify(appState.cart),
+                    created_at: new Date().toISOString()
                 })
                 .select()
                 .single();
@@ -494,6 +528,26 @@ async function submitOrder() {
                     .insert(orderItems);
                 
                 console.log('Sipariş kalemleri eklendi');
+                
+                // Bildirim kanalına yayın yap
+                try {
+                    await supabase.channel('restaurant-app').send({
+                        type: 'broadcast',
+                        event: 'restaurant-updates',
+                        payload: {
+                            type: 'qr-order',
+                            tableNumber: appState.tableNumber,
+                            orderId: data.id,
+                            message: `Masa ${appState.tableNumber} QR sipariş oluşturdu`,
+                            sender: `customer_table_${appState.tableNumber}`,
+                            items: appState.cart,
+                            total: totalAmount
+                        }
+                    });
+                    console.log('QR sipariş bildirimi gönderildi');
+                } catch (err) {
+                    console.error('Bildirim gönderilemedi:', err);
+                }
             }
         } catch (error) {
             console.log('Siparisler tablosunda sipariş oluşturulamadı:', error);
@@ -511,7 +565,8 @@ async function submitOrder() {
                         note: elements.orderNote.value.trim() || null,
                         total_amount: totalAmount,
                         is_customer_order: true,
-                        items: JSON.stringify(appState.cart)
+                        items: JSON.stringify(appState.cart),
+                        created_at: new Date().toISOString()
                     })
                     .select()
                     .single();
@@ -536,6 +591,26 @@ async function submitOrder() {
                         .insert(orderItems);
                     
                     console.log('Sipariş kalemleri eklendi (order_items tablosu)');
+                    
+                    // Bildirim kanalına yayın yap
+                    try {
+                        await supabase.channel('restaurant-app').send({
+                            type: 'broadcast',
+                            event: 'restaurant-updates',
+                            payload: {
+                                type: 'qr-order',
+                                tableNumber: appState.tableNumber,
+                                orderId: data.id,
+                                message: `Masa ${appState.tableNumber} QR sipariş oluşturdu`,
+                                sender: `customer_table_${appState.tableNumber}`,
+                                items: appState.cart,
+                                total: totalAmount
+                            }
+                        });
+                        console.log('QR sipariş bildirimi gönderildi');
+                    } catch (err) {
+                        console.error('Bildirim gönderilemedi:', err);
+                    }
                 }
             } catch (error) {
                 console.log('Orders tablosunda sipariş oluşturulamadı:', error);
@@ -630,6 +705,7 @@ async function callWaiter() {
     try {
         elements.loadingOverlay.style.display = 'flex';
         elements.callWaiterBtn.disabled = true;
+        elements.callWaiterBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i> İşleniyor...';
         
         // Masa durumunu güncelle
         await updateTableStatus('çağrı');
@@ -638,17 +714,41 @@ async function callWaiter() {
         let callCreated = false;
         
         try {
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('waiter_calls')
                 .insert({
                     table_id: appState.tableId,
                     table_number: appState.tableNumber,
-                    status: 'waiting'
-                });
+                    status: 'waiting',
+                    created_at: new Date().toISOString(),
+                    is_urgent: true
+                })
+                .select()
+                .single();
                 
-            if (!error) {
+            if (!error && data) {
                 callCreated = true;
-                console.log('Garson çağrısı oluşturuldu');
+                console.log('Garson çağrısı oluşturuldu:', data);
+                
+                // Bildirim kanalına yayın yap
+                try {
+                    await supabase.channel('restaurant-app').send({
+                        type: 'broadcast',
+                        event: 'restaurant-updates',
+                        payload: {
+                            type: 'waiter-call',
+                            tableNumber: appState.tableNumber,
+                            callId: data.id,
+                            message: `Masa ${appState.tableNumber} garson çağırıyor`,
+                            sender: `customer_table_${appState.tableNumber}`,
+                            urgent: true,
+                            timestamp: new Date().toISOString()
+                        }
+                    });
+                    console.log('Garson çağrısı bildirimi gönderildi');
+                } catch (err) {
+                    console.error('Bildirim gönderilemedi:', err);
+                }
             }
         } catch (error) {
             console.log('Waiter_calls tablosunda çağrı oluşturulamadı:', error);
@@ -661,6 +761,9 @@ async function callWaiter() {
         // Başarılı modalını göster
         elements.waiterCallModal.show();
         
+        // Butonu normal haline getir
+        elements.callWaiterBtn.innerHTML = '<i class="bi bi-bell-fill me-2"></i> Garson Çağır';
+        
     } catch (error) {
         console.error('Garson çağrılırken hata:', error);
         showError('Garson çağrılırken bir hata oluştu: ' + error.message);
@@ -670,7 +773,52 @@ async function callWaiter() {
     }
 }
 
+// Toast mesajı göster
+function showToast(message) {
+    // Eğer mevcut bir toast varsa, onu kaldır
+    const existingToast = document.querySelector('.toast-container');
+    if (existingToast) {
+        document.body.removeChild(existingToast);
+    }
+    
+    // Yeni toast oluştur
+    const toastContainer = document.createElement('div');
+    toastContainer.className = 'toast show position-fixed bottom-0 end-0 p-3';
+    toastContainer.style.zIndex = '5000';
+    
+    toastContainer.innerHTML = `
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Bildirim</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(toastContainer);
+    
+    // 3 saniye sonra toast'u kaldır
+    setTimeout(() => {
+        if (document.body.contains(toastContainer)) {
+            document.body.removeChild(toastContainer);
+        }
+    }, 3000);
+    
+    // Kapatma butonuna tıklama olayı ekle
+    const closeButton = toastContainer.querySelector('.btn-close');
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            if (document.body.contains(toastContainer)) {
+                document.body.removeChild(toastContainer);
+            }
+        });
+    }
+}
+
 // Hata mesajı göster
 function showError(message) {
-    alert(message);
+    showToast(message);
 }
